@@ -12,16 +12,16 @@ namespace ClientCrudApp.Models
 
         public enum GenderType { Male, Female, Other }
         [Required(ErrorMessage = "Gender is required")]
-        public required GenderType Gender { get; set; } 
+        public required GenderType Gender { get; set; }
 
 
         [Required(ErrorMessage = "Country code is required")]
         [Display(Name = "Country Code")]
         [RegularExpression(@"^\+\d{0,4}$", ErrorMessage = "Invalid country code format")]
-        public required string CountryCode { get; set; } 
+        public required string CountryCode { get; set; }
 
         [Required(ErrorMessage = "Phone number is required")]
-        [RegularExpression(@"^[0-9\s\-]{7,15}$", ErrorMessage = "Phone must be between 7 and 15 digits")]
+        [RegularExpression(@"^[0-9\s\-]{7,15}$", ErrorMessage = "Invalid phone number")]
         [Display(Name = "Phone No.")]
         public required string Phone { get; set; }
 
@@ -31,7 +31,8 @@ namespace ClientCrudApp.Models
 
 
         [Required(ErrorMessage = "Email is required")]
-        [EmailAddress(ErrorMessage = "Invalid email address")]
+        [RegularExpression(@"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$",
+        ErrorMessage = "Invalid Email")]
         [MaxLength(50, ErrorMessage = "Email cannot exceed 50 characters")]
         [Display(Name = "Email Address")]
         public required string Email { get; set; }
@@ -53,17 +54,17 @@ namespace ClientCrudApp.Models
         [CustomValidation(typeof(Client), nameof(ValidateDOB))]
         public required DateTime DateOfBirth { get; set; }
 
-       
+        [Required(ErrorMessage = "Education Background is required")]
         [MaxLength(255, ErrorMessage = "Education Background Cannot exceed 255 characters")]
         [Display(Name = "Education Background")]
-        public string? EducationBackground { get; set; }
+        public required string EducationBackground { get; set; }
 
 
         public enum ContactMode { Email, Phone, None }
 
         [Required(ErrorMessage = "Preferred Model of Contact is required")]
         [Display(Name = "Preferred Mode of Contact")]
-        public required ContactMode PreferredModeOfContact { get; set; } = ContactMode.None;
+        public required ContactMode PreferredModeOfContact { get; set; }
 
         public static ValidationResult? ValidateDOB(DateTime dob, ValidationContext context)
         {
@@ -71,9 +72,9 @@ namespace ClientCrudApp.Models
             {
                 return new ValidationResult("Date of Birth cannot be in future");
             }
-            if (dob < new DateTime(1920, 1, 1))
+            if (dob < new DateTime(1940, 1, 1))
             {
-                return new ValidationResult("Date of Birth cannot be before 1920.");
+                return new ValidationResult("Date of Birth cannot be before 1940.");
             }
             return ValidationResult.Success;
         }

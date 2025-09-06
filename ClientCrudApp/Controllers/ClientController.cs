@@ -31,9 +31,21 @@ namespace ClientCrudApp.Controllers
             {
                "Id,Name,Gender,CountryCode,Phone,Email,Address,Nationality,DateOfBirth,EducationBackground,PreferredModeOfContact"
             };
-            lines.AddRange(clients.Select(c => $"{c.Id},{c.Name},{c.Gender},{c.CountryCode},{c.Phone},{c.Email},{c.Address},{c.Nationality},{c.DateOfBirth:yyyy-MM-dd},{c.EducationBackground},{c.PreferredModeOfContact}"));
+            lines.AddRange(clients.Select(c =>
+                    $"{c.Id}," +
+                    $"{c.Name.Replace(", ", " ")}," +
+                    $"{c.Gender}," +
+                    $"{c.CountryCode.Replace(", ", " ")}," +
+                    $"{c.Phone.Replace(", ", " ")}," +
+                    $"{c.Email.Replace(", ", " ")}," +
+                    $"{c.Address.Replace(",", " ")}," +
+                    $"{c.Nationality.Replace(",", " ")}," +
+                    $"{c.DateOfBirth:yyyy-MM-dd}," +
+                    $"{(c.EducationBackground ?? "").Replace(",", " ")}," +
+                    $"{c.PreferredModeOfContact}"
+                ));
             System.IO.File.WriteAllLines(_filePath, lines);
-            TempData["Success"] = "Client added successfully";
+            
         }
         //Read All Clients
         private List<Client> ReadClientsFromCsv()
@@ -57,7 +69,7 @@ namespace ClientCrudApp.Controllers
                     Address = cols[6],
                     Nationality = cols[7],
                     DateOfBirth = DateTime.Parse(cols[8]),
-                    EducationBackground = cols.Length > 9 ? cols[9] : "",
+                    EducationBackground = cols[9],
                     PreferredModeOfContact = Enum.Parse<Client.ContactMode>(cols[10])
                 });
             }
@@ -143,7 +155,6 @@ namespace ClientCrudApp.Controllers
                 existingClient.PreferredModeOfContact = client.PreferredModeOfContact;
 
                 SaveClientsToCsv(clients);
-                TempData["Success"] = "Client Updated successfully";
                 return RedirectToAction("Index");
             }
             return View(client);

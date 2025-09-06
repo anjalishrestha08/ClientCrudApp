@@ -1,0 +1,128 @@
+﻿@model ClientCrudApp.Models.Client
+
+@{
+    ViewData["Title"] = "Create Client";
+}
+
+<div class="container py-2 mb-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <!-- Card for visual grouping -->
+            <div class="card shadow-lg border-0">
+                <div class="card-header text-white"
+                     style="background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);">
+                    <h4 class="mb-0">Create New Client</h4>
+                </div>
+                <div class="card-body">
+                    <!-- Form: posts to ClientController.Create -->
+                    <form asp-action="Create" method="post">
+                        <!-- Shows model-level errors -->
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                        <div class="row g-3">
+                            <!-- Name -->
+                            <div class="col-md-6">
+                                <label asp-for="Name" class="form-label"></label>
+                                <input asp-for="Name" class="form-control"
+                                       placeholder="Full Name" required />
+                                <span asp-validation-for="Name" class="text-danger"></span>
+                            </div>
+
+                            <!-- Gender -->
+                            <div class="col-md-6">
+                                <label asp-for="Gender" class="form-label"></label>
+                                <select asp-for="Gender" class="form-select">
+                                    <option value="">-- Select Gender --</option>
+                                    @foreach (var g in Enum.GetValues(typeof(Client.GenderType)))
+                                    {
+                                        <option value="@g">@g</option>
+                                    }
+                                </select>
+                                <span asp-validation-for="Gender" class="text-danger"></span>
+                            </div>
+
+                            <!-- Country Code -->
+                            <div class="col-md-3">
+                                <label asp-for="CountryCode" class="form-label"></label>
+                                <input type="text" asp-for="CountryCode" class="form-control"
+                                       placeholder="eg: +977" pattern="^\+\d{1,4}$"
+                                       title="Enter valid country code like +977" required />
+                                <span asp-validation-for="CountryCode" class="text-danger"></span>
+                            </div>
+
+                            <!-- Phone Number -->
+                            <div class="col-md-9">
+                                <label asp-for="Phone" class="form-label"></label>
+                                <input type="tel" asp-for="Phone" class="form-control"
+                                       pattern="^[0-9\s\-]{7,15}$" required/>
+                                <span asp-validation-for="Phone" class="text-danger"></span>
+                            </div>
+
+                            <!-- Email -->
+                            <div class="col-md-6">
+                                <label asp-for="Email" class="form-label"></label>
+                                <input type="email" asp-for="Email" class="form-control"
+                                       placeholder="example@email.com" required />
+                                <span asp-validation-for="Email" class="text-danger"></span>
+                            </div>
+
+                            <!-- Nationality -->
+                            <div class="col-md-6">
+                                <label asp-for="Nationality" class="form-label"></label>
+                                <input asp-for="Nationality" class="form-control" required />
+                                <span asp-validation-for="Nationality" class="text-danger"></span>
+                            </div>
+
+                            <!-- Address -->
+                            <div class="col-12">
+                                <label asp-for="Address" class="form-label"></label>
+                                <input asp-for="Address" class="form-control"
+                                       placeholder="Full address" required />
+                                <span asp-validation-for="Address" class="text-danger"></span>
+                            </div>
+
+                            <!-- Date of Birth -->
+                            <div class="col-md-6">
+                                <label asp-for="DateOfBirth" class="form-label"></label>
+                                <input type="date" asp-for="DateOfBirth" class="form-control"
+                                       min="1940-01-01" max="@DateTime.Now.ToString("yyyy-MM-dd")" />
+                                <span asp-validation-for="DateOfBirth" class="text-danger"></span>
+                            </div>
+
+                            <!-- Preferred Mode of Contact -->
+                            <div class="col-md-6">
+                                <label asp-for="PreferredModeOfContact" class="form-label"></label>
+                                <select asp-for="PreferredModeOfContact" class="form-select">
+                                    <option value="">-- Select Preferred Mode --</option>
+                                    @foreach (var pm in Enum.GetValues(typeof(Client.ContactMode)))
+                                    {
+                                        <option value="@pm">@pm</option>
+                                    }
+                                </select>
+                                <span asp-validation-for="PreferredModeOfContact" class="text-danger"></span>
+                            </div>
+
+                            <!-- Education Background (optional) -->
+                            <div class="col-12">
+                                <label asp-for="EducationBackground" class="form-label"></label>
+                                <input asp-for="EducationBackground" class="form-control" rows="2"
+                                        required/>
+                                <span asp-validation-for="EducationBackground" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <!-- Buttons -->
+                        <div class="mt-3 text-end">
+                            <a asp-action="Index" class="btn btn-outline-secondary me-2">Cancel</a>
+                            <button type="submit" class="btn btn-primary">Create Client</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
