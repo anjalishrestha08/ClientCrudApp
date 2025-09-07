@@ -17,61 +17,84 @@ namespace ClientCrudApp.Controllers
             var clients = ReadClientsFromCsv();
             client.Id = clients.Any() ? clients.Max(c => c.Id) + 1 : 1;
             clients.Add(client);
-            SaveClientsToCsv(clients);
+            try
+            {
+                SaveClientsToCsv(clients);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error saving clients CSV: {e.Message}");
+                TempData["Error"] = "Failed to save client data. Please try again.";
+            }
         }
         //Save all clients
         private void SaveClientsToCsv(List<Client> clients)
         {
-            var dir = Path.GetDirectoryName(_filePath);
-            if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
+            try
             {
-                Directory.CreateDirectory(dir);
-            }
-            var lines = new List<string>
+                var dir = Path.GetDirectoryName(_filePath);
+                if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
+                {
+                    Directory.CreateDirectory(dir);
+                }
+                var lines = new List<string>
             {
                "Id,Name,Gender,CountryCode,Phone,Email,Address,Nationality,DateOfBirth,EducationBackground,PreferredModeOfContact"
             };
-            lines.AddRange(clients.Select(c =>
-                    $"{c.Id}," +
-                    $"{c.Name.Replace(", ", " ")}," +
-                    $"{c.Gender}," +
-                    $"{c.CountryCode.Replace(", ", " ")}," +
-                    $"{c.Phone.Replace(", ", " ")}," +
-                    $"{c.Email.Replace(", ", " ")}," +
-                    $"{c.Address.Replace(",", " ")}," +
-                    $"{c.Nationality.Replace(",", " ")}," +
-                    $"{c.DateOfBirth:yyyy-MM-dd}," +
-                    $"{(c.EducationBackground ?? "").Replace(",", " ")}," +
-                    $"{c.PreferredModeOfContact}"
-                ));
-            System.IO.File.WriteAllLines(_filePath, lines);
-            
+                lines.AddRange(clients.Select(c =>
+                        $"{c.Id}," +
+                        $"{c.Name.Replace(", ", " ")}," +
+                        $"{c.Gender}," +
+                        $"{c.CountryCode.Replace(", ", " ")}," +
+                        $"{c.Phone.Replace(", ", " ")}," +
+                        $"{c.Email.Replace(", ", " ")}," +
+                        $"{c.Address.Replace(",", " ")}," +
+                        $"{c.Nationality.Replace(",", " ")}," +
+                        $"{c.DateOfBirth:yyyy-MM-dd}," +
+                        $"{(c.EducationBackground ?? "").Replace(",", " ")}," +
+                        $"{c.PreferredModeOfContact}"
+                    ));
+                System.IO.File.WriteAllLines(_filePath, lines);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error saving clients CSV: {e.Message}");
+                TempData["Error"] = "Failed to save client data. Please try again.";
+            }
         }
         //Read All Clients
         private List<Client> ReadClientsFromCsv()
         {
             var clients = new List<Client>();
-            if (!System.IO.File.Exists(_filePath))
-                return clients;
-            var lines = System.IO.File.ReadAllLines(_filePath).Skip(1); // Skip header
-            foreach (var line in lines)
+            try
             {
-                if (string.IsNullOrWhiteSpace(line)) continue;
-                var cols = line.Split(',');
-                clients.Add(new Client
+                if (!System.IO.File.Exists(_filePath))
+                    return clients;
+                var lines = System.IO.File.ReadAllLines(_filePath).Skip(1); // Skip header
+                foreach (var line in lines)
                 {
-                    Id = int.Parse(cols[0]),
-                    Name = cols[1],
-                    Gender = Enum.Parse<Client.GenderType>(cols[2]),
-                    CountryCode = cols[3],
-                    Phone = cols[4],
-                    Email = cols[5],
-                    Address = cols[6],
-                    Nationality = cols[7],
-                    DateOfBirth = DateTime.Parse(cols[8]),
-                    EducationBackground = cols[9],
-                    PreferredModeOfContact = Enum.Parse<Client.ContactMode>(cols[10])
-                });
+                    if (string.IsNullOrWhiteSpace(line)) continue;
+                    var cols = line.Split(',');
+                    clients.Add(new Client
+                    {
+                        Id = int.Parse(cols[0]),
+                        Name = cols[1],
+                        Gender = Enum.Parse<Client.GenderType>(cols[2]),
+                        CountryCode = cols[3],
+                        Phone = cols[4],
+                        Email = cols[5],
+                        Address = cols[6],
+                        Nationality = cols[7],
+                        DateOfBirth = DateTime.Parse(cols[8]),
+                        EducationBackground = cols[9],
+                        PreferredModeOfContact = Enum.Parse<Client.ContactMode>(cols[10])
+                    });
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error reading clients CSV: ", e);
+                TempData["Error"] = "Failed to read client data. Please try again.";
             }
             return clients;
         }
@@ -135,7 +158,7 @@ namespace ClientCrudApp.Controllers
         public IActionResult Edit(int id, Client client)
         {
             if (id != client.Id) return NotFound();
-            
+
             if (ModelState.IsValid)
             {
                 var clients = ReadClientsFromCsv();
