@@ -48,8 +48,8 @@
                         <td>@(string.IsNullOrEmpty(client.EducationBackground) ? "N/A" : client.EducationBackground)</td>
                         <td>@client.PreferredModeOfContact</td>
                         <td>
-                            <a asp-action="Details" asp-route-id="@client.Id" class="btn btn-info btn-sm me-1" title="View Details">Details</a>
-                            <a asp-action="Edit" asp-route-id="@client.Id" class="btn btn-warning btn-sm me-1" >Edit</a>
+                                <a asp-action="Details" asp-route-id="@client.Id" class="btn btn-info btn-sm me-1" style="background-color:lightskyblue" title="View Details">Details</a>
+                                <a asp-action="Edit" asp-route-id="@client.Id" class="btn btn-sm me-1" style="background-color:rebeccapurple; color:white;">Edit</a>
                             <a asp-action="Delete" asp-route-id="@client.Id" class="btn btn-danger btn-sm mt-1">Delete</a>
                         </td>
                     </tr>

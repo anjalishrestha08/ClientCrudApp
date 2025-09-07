@@ -1,0 +1,45 @@
+﻿@{
+    ViewData["Title"] = "Client Details";
+}
+<div class="container py-2 mb-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card shadow-lg border-0">
+                <!--Header-->
+                <div class="card-header text-white" style="background:linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);">
+                    <h4 class="mb-0">Client: @Model.Name</h4>
+                </div>
+                <!--Body-->
+                <div class="card-body">
+                    <dl class="row g-3">
+                        <dt class="col-sm-4">ID</dt>
+                        <dd class="col-sm-8">@Model.Id</dd>
+                        <dt class="col-sm-4">Name</dt>
+                        <dd class="col-sm-8">@Model.Name</dd>
+                        <dt class="col-sm-4">Gender</dt>
+                        <dd class="col-sm-8">@Model.Gender</dd>
+                        <dt class="col-sm-4">Phone No.</dt>
+                        <dd class="col-sm-8">@Model.FullPhone</dd>
+                        <dt class="col-sm-4">Email</dt>
+                        <dd class="col-sm-8">@Model.Email</dd>
+                        <dt class="col-sm-4">Address</dt>
+                        <dd class="col-sm-8">@Model.Address</dd>
+                        <dt class="col-sm-4">Nationality</dt>
+                        <dd class="col-sm-8">@Model.Nationality</dd>
+                        <dt class="col-sm-4">Date of Birth</dt>
+                        <dd class="col-sm-8">@Model.DateOfBirth.ToString("yyyy-MM-dd")</dd>
+                        <dt class="col-sm-4">Education Background</dt>
+                        <dd class="col-sm-8">@Model.EducationBackground</dd>
+                        <dt class="col-sm-4">Preferred Mode of Contact</dt>
+                        <dd class="col-sm-8">@Model.PreferredModeOfContact</dd>
+                    </dl>
+                    <!-- Buttons -->
+                    <div class="mt-4 text-end">
+                        <a asp-action="Index" class="btn btn-outline-secondary me-2">Back to List</a>
+                        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary" style="background-color:rebeccapurple;">Edit Client</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

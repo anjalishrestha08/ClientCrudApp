@@ -26,7 +26,7 @@ namespace ClientCrudApp.Models
         public required string Phone { get; set; }
 
         [Display(Name = "Phone Number")]
-        public string FullPhone => $"{CountryCode}{Phone}";
+        public string FullPhone => $"{CountryCode} {Phone}";
 
 
 
