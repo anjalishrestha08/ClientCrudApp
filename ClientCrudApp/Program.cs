@@ -1,7 +1,11 @@
+using ClientCrudApp.Repositories;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+
+builder.Services.AddScoped<IClientRepository, CsvClientRepository>();
 
 var app = builder.Build();
 

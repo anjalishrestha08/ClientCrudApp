@@ -1,109 +1,24 @@
 ﻿using ClientCrudApp.Models;
+using ClientCrudApp.Repositories;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ClientCrudApp.Controllers
 {
     public class ClientController : Controller
     {
-        private readonly string _filePath;
+        private readonly IClientRepository _repository;
 
-        public ClientController()
+        public ClientController(IClientRepository repository)
         {
-            _filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "data", "clients.csv");
-        }
-        //Save single client
-        private void SaveClients(Client client)
-        {
-            var clients = ReadClientsFromCsv();
-            client.Id = clients.Any() ? clients.Max(c => c.Id) + 1 : 1;
-            clients.Add(client);
-            try
-            {
-                SaveClientsToCsv(clients);
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine($"Error saving clients CSV: {e.Message}");
-                TempData["Error"] = "Failed to save client data. Please try again.";
-            }
-        }
-        //Save all clients
-        private void SaveClientsToCsv(List<Client> clients)
-        {
-            try
-            {
-                var dir = Path.GetDirectoryName(_filePath);
-                if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
-                {
-                    Directory.CreateDirectory(dir);
-                }
-                var lines = new List<string>
-            {
-               "Id,Name,Gender,CountryCode,Phone,Email,Address,Nationality,DateOfBirth,EducationBackground,PreferredModeOfContact"
-            };
-                lines.AddRange(clients.Select(c =>
-                        $"{c.Id}," +
-                        $"{c.Name.Replace(", ", " ")}," +
-                        $"{c.Gender}," +
-                        $"{c.CountryCode.Replace(", ", " ")}," +
-                        $"{c.Phone.Replace(", ", " ")}," +
-                        $"{c.Email.Replace(", ", " ")}," +
-                        $"{c.Address.Replace(",", " ")}," +
-                        $"{c.Nationality.Replace(",", " ")}," +
-                        $"{c.DateOfBirth:yyyy-MM-dd}," +
-                        $"{(c.EducationBackground ?? "").Replace(",", " ")}," +
-                        $"{c.PreferredModeOfContact}"
-                    ));
-                System.IO.File.WriteAllLines(_filePath, lines);
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine($"Error saving clients CSV: {e.Message}");
-                TempData["Error"] = "Failed to save client data. Please try again.";
-            }
-        }
-        //Read All Clients
-        private List<Client> ReadClientsFromCsv()
-        {
-            var clients = new List<Client>();
-            try
-            {
-                if (!System.IO.File.Exists(_filePath))
-                    return clients;
-                var lines = System.IO.File.ReadAllLines(_filePath).Skip(1); // Skip header
-                foreach (var line in lines)
-                {
-                    if (string.IsNullOrWhiteSpace(line)) continue;
-                    var cols = line.Split(',');
-                    clients.Add(new Client
-                    {
-                        Id = int.Parse(cols[0]),
-                        Name = cols[1],
-                        Gender = Enum.Parse<Client.GenderType>(cols[2]),
-                        CountryCode = cols[3],
-                        Phone = cols[4],
-                        Email = cols[5],
-                        Address = cols[6],
-                        Nationality = cols[7],
-                        DateOfBirth = DateTime.Parse(cols[8]),
-                        EducationBackground = cols[9],
-                        PreferredModeOfContact = Enum.Parse<Client.ContactMode>(cols[10])
-                    });
-                }
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine($"Error reading clients CSV: {e.Message}");
-                TempData["Error"] = "Failed to read client data. Please try again.";
-            }
-            return clients;
+            _repository = repository;
         }
 
+        //Index with Pagination
         public IActionResult Index(int page = 1, int pageSize = 10)
         {
             try
             {
-                var clients = ReadClientsFromCsv();
+                var clients = _repository.GetAllClients();
 
                 // Pagination Total Count
                 int totalClients = clients.Count;
@@ -132,8 +47,6 @@ namespace ClientCrudApp.Controllers
                 TempData["Error"] = "Failed to load client data. Please try again.";
                 return View(new List<Client>());
             }
-          
-           
         }
 
         //Create
@@ -148,8 +61,17 @@ namespace ClientCrudApp.Controllers
         {
             if (ModelState.IsValid)
             {
-                SaveClients(client);
-                return RedirectToAction("Index");
+                try
+                {
+                    _repository.AddClient(client);
+                    TempData["Success"] = "Client created successfully!";
+                    return RedirectToAction("Index");
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine($"Error creating client: {e.Message}");
+                    TempData["Error"] = "Failed to create client. Please try again.";
+                }
             }
             return View(client);
         }
@@ -160,10 +82,11 @@ namespace ClientCrudApp.Controllers
             {
                 return NotFound();
             }
-            var client = ReadClientsFromCsv().FirstOrDefault(c => c.Id == id);
+            var client = _repository.GetClientById(id.Value);
             if (client == null)
             {
-                return NotFound();
+                TempData["Error"] = "Client not found.";
+                return RedirectToAction("Index");
             }
             return View(client);
         }
@@ -176,10 +99,11 @@ namespace ClientCrudApp.Controllers
             {
                 return NotFound();
             }
-            var client = ReadClientsFromCsv().FirstOrDefault(c => c.Id == id);
+            var client = _repository.GetClientById(id.Value);
             if (client == null)
             {
-                return NotFound();
+                TempData["Error"] = "Client not found.";
+                return RedirectToAction("Index");
             }
             return View(client);
         }
@@ -192,24 +116,17 @@ namespace ClientCrudApp.Controllers
 
             if (ModelState.IsValid)
             {
-                var clients = ReadClientsFromCsv();
-                var existingClient = clients.FirstOrDefault(c => c.Id == id);
-
-                if (existingClient == null) return NotFound();
-
-                existingClient.Name = client.Name;
-                existingClient.Gender = client.Gender;
-                existingClient.CountryCode = client.CountryCode;
-                existingClient.Phone = client.Phone;
-                existingClient.Email = client.Email;
-                existingClient.Address = client.Address;
-                existingClient.Nationality = client.Nationality;
-                existingClient.DateOfBirth = client.DateOfBirth;
-                existingClient.EducationBackground = client.EducationBackground;
-                existingClient.PreferredModeOfContact = client.PreferredModeOfContact;
-
-                SaveClientsToCsv(clients);
-                return RedirectToAction("Index");
+                try
+                {
+                    _repository.UpdateClient(client);
+                    TempData["Success"] = "Client updated successfully!";
+                    return RedirectToAction("Index");
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine($"Error updating client: {e.Message}");
+                    TempData["Error"] = "Failed to update client. Please try again.";
+                }
             }
             return View(client);
         }
@@ -218,14 +135,13 @@ namespace ClientCrudApp.Controllers
         [HttpGet]
         public IActionResult Delete(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
-            var client = ReadClientsFromCsv().FirstOrDefault(c => c.Id == id);
+            if (id == null) return NotFound();
+
+            var client = _repository.GetClientById(id.Value);
             if (client == null)
             {
-                return NotFound();
+                TempData["Error"] = "Client not found.";
+                return RedirectToAction("Index");
             }
             return View(client);
         }
@@ -233,13 +149,15 @@ namespace ClientCrudApp.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult DeleteConfirmed(int id)
         {
-            var clients = ReadClientsFromCsv();
-            var client = clients.FirstOrDefault(c => c.Id == id);
-            if (client != null)
+            try
             {
-                clients.Remove(client);
-                SaveClientsToCsv(clients);
-                TempData["Success"] = "Client deleted successfully";
+                _repository.DeleteClient(id);
+                TempData["Success"] = "Client deleted successfully!";
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error deleting client: {e.Message}");
+                TempData["Error"] = "Failed to delete client.";
             }
             return RedirectToAction("Index");
         }
