@@ -33,7 +33,7 @@ jobs:
       uses: SonarSource/sonarcloud-github-action@v2
       with:
         organization: "anjalishrestha08"
-        projectKey: "ClientCrudApp"
+        projectKey: "anjalishrestha08"
         projectName: "ClientCrudApp"
       env:
         SONAR_TOKEN: ${{ secrets.ClientCrudAppSonarToken }}
