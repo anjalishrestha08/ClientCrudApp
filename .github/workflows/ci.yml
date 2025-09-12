@@ -33,7 +33,7 @@ jobs:
     - name: SonarCloud Scan
       uses: SonarSource/sonarcloud-github-action@v2
       env:
-        SONAR_TOKEN: ${{ secrets.ClientCrudAppSonarToken }}
+        SONAR_TOKEN: ${{ secrets.ClientCrudApp_SonarToken }}
       with:
         args: >
           -Dsonar.organization=anjalishrestha08
