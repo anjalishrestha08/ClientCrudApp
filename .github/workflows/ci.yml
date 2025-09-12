@@ -32,8 +32,8 @@ jobs:
     - name: SonarCloud Scan
       uses: SonarSource/sonarcloud-github-action@v2
       with:
-        organization: "anjalishrestha08"
-        projectKey: "anjalishrestha08"
-        projectName: "ClientCrudApp"
-      env:
-        SONAR_TOKEN: ${{ secrets.ClientCrudAppSonarToken }}
+        args: >
+          -Dsonar.organization=anjalishrestha08
+          -Dsonar.projectKey=anjalishrestha08_ClientCrudApp
+          -Dsonar.projectName="ClientCrudApp"
+          -Dsonar.host.url=https://sonarcloud.io
