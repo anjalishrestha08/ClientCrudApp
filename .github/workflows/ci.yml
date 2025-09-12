@@ -29,3 +29,11 @@ jobs:
 
     - name: Run tests
       run: dotnet test --no-build --configuration Release --collect:"Xplat Code Coverage"
+    - name: SonarCloud Scan
+      uses: SonarSource/sonarcloud-github-action@v2
+      with:
+        organization: "anjalishrestha08"
+        projectKey: "ClientCrudApp"
+        projectName: "ClientCrudApp"
+      env:
+        SONAR_TOKEN: ${{ secrets.ClientCrudAppSonarToken }}
