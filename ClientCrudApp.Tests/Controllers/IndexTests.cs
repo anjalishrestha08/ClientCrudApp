@@ -3,6 +3,7 @@ using ClientCrudApp.Models;
 using ClientCrudApp.Repositories;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
+using Microsoft.Extensions.Logging;
 using Moq;
 using System;
 using System.Collections.Generic;
@@ -13,13 +14,15 @@ namespace ClientCrudApp.Tests.Controllers
     public class IndexTests
     {
         private readonly Mock<IClientRepository> _mockRepo;
+        private readonly Mock<ILogger<ClientController>> _mockLogger;
         private readonly ClientController _controller;
         private readonly List<Client> _sampleClients;
 
         public IndexTests()
         {
             _mockRepo = new Mock<IClientRepository>();
-            _controller = new ClientController(_mockRepo.Object);
+            _mockLogger = new Mock<ILogger<ClientController>>();
+            _controller = new ClientController(_mockRepo.Object,_mockLogger.Object);
             var tempData = new Mock<ITempDataDictionary>();
             _controller.TempData = tempData.Object;
 
