@@ -1,6 +1,7 @@
 ﻿using ClientCrudApp.Models;
 using ClientCrudApp.Repositories;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging; 
 
 namespace ClientCrudApp.Controllers
 {
@@ -8,9 +9,12 @@ namespace ClientCrudApp.Controllers
     {
         private readonly IClientRepository _repository;
 
-        public ClientController(IClientRepository repository)
+        private readonly ILogger<ClientController> _logger;
+
+        public ClientController(IClientRepository repository, ILogger<ClientController> logger)
         {
             _repository = repository;
+            _logger = logger;
         }
 
         //Index with Pagination
@@ -27,14 +31,24 @@ namespace ClientCrudApp.Controllers
                 if (totalPages == 0) totalPages = 1; // at least 1 page
 
                 //Redirect Logic
-                if (page < 1) return RedirectToAction("Index", new { page = 1 });
-                if (page > totalPages) return RedirectToAction("Index", new { page = totalPages });
+                if (page < 1)
+                {
+                    _logger.LogWarning("Invalid page number {Page}, redirecting to 1", page);
+                    return RedirectToAction("Index", new { page = 1 });
+                }
+
+                if (page > totalPages)
+                {
+                    _logger.LogWarning("Page exceeds total pages, redirecting to {TotalPages}", totalPages);
+                    return RedirectToAction("Index", new { page = totalPages });
+                }
 
                 //Skip and Take
                 var paginatedClients = clients
                     .Skip((page - 1) * pageSize)
                     .Take(pageSize)
                     .ToList();
+
                 //Pass pagination info to View 
                 ViewBag.CurrentPage = page;
                 ViewBag.TotalPages = totalPages;
@@ -43,7 +57,7 @@ namespace ClientCrudApp.Controllers
             }
             catch(Exception e)
             {
-                Console.WriteLine($"Error loading clients for Index view: {e.Message}");
+                _logger.LogError(e, "Error loading clients for Index view");
                 TempData["Error"] = "Failed to load client data. Please try again.";
                 return View(new List<Client>());
             }
@@ -53,8 +67,10 @@ namespace ClientCrudApp.Controllers
         [HttpGet]
         public IActionResult Create()
         {
+            _logger.LogInformation("Accessed Create view");
             return View();
         }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult Create(Client client)
@@ -64,30 +80,41 @@ namespace ClientCrudApp.Controllers
                 try
                 {
                     _repository.AddClient(client);
+                    _logger.LogInformation("Client {ClientName} created successfully with ID {ClientId}", client.Name, client.Id);
                     TempData["Success"] = "Client created successfully!";
                     return RedirectToAction("Index");
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine($"Error creating client: {e.Message}");
+                    _logger.LogError(e, "Error creating client {ClientName}", client.Name);
                     TempData["Error"] = "Failed to create client. Please try again.";
                 }
             }
+            else
+            {
+                _logger.LogWarning("Invalid model state while creating client");
+            }
             return View(client);
         }
+
         //Details
         public IActionResult Details(int? id)
         {
             if (id == null)
             {
+                _logger.LogWarning("Details requested with null ID");
                 return NotFound();
             }
+
             var client = _repository.GetClientById(id.Value);
             if (client == null)
             {
+                _logger.LogWarning("Client with ID {ClientId} not found for Details", id.Value);
                 TempData["Error"] = "Client not found.";
                 return RedirectToAction("Index");
             }
+
+            _logger.LogInformation("Details viewed for client {ClientName} with ID {ClientId}", client.Name, client.Id);
             return View(client);
         }
 
@@ -97,14 +124,19 @@ namespace ClientCrudApp.Controllers
         {
             if (id == null)
             {
+                _logger.LogWarning("Edit requested with null ID");
                 return NotFound();
             }
+
             var client = _repository.GetClientById(id.Value);
             if (client == null)
             {
+                _logger.LogWarning("Client with ID {ClientId} not found for Edit", id.Value);
                 TempData["Error"] = "Client not found.";
                 return RedirectToAction("Index");
             }
+
+            _logger.LogInformation("Accessed Edit view for client {ClientName} with ID {ClientId}", client.Name, client.Id);
             return View(client);
         }
 
@@ -112,22 +144,32 @@ namespace ClientCrudApp.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult Edit(int id, Client client)
         {
-            if (id != client.Id) return NotFound();
+            if (id != client.Id)
+            {
+                _logger.LogWarning("Edit attempted with mismatched IDs: route ID {Id} vs model ID {ClientId}", id, client.Id);
+                return NotFound();
+            }
 
             if (ModelState.IsValid)
             {
                 try
                 {
                     _repository.UpdateClient(client);
+                    _logger.LogInformation("Client {ClientName} with ID {ClientId} updated successfully", client.Name, client.Id);
                     TempData["Success"] = "Client updated successfully!";
                     return RedirectToAction("Index");
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine($"Error updating client: {e.Message}");
+                    _logger.LogError(e, "Error updating client {ClientName} with ID {ClientId}", client.Name, client.Id);
                     TempData["Error"] = "Failed to update client. Please try again.";
                 }
             }
+            else
+            {
+                _logger.LogWarning("Invalid model state while editing client with ID {ClientId}", client.Id);
+            }
+
             return View(client);
         }
 
@@ -135,16 +177,24 @@ namespace ClientCrudApp.Controllers
         [HttpGet]
         public IActionResult Delete(int? id)
         {
-            if (id == null) return NotFound();
+            if (id == null)
+            {
+                _logger.LogWarning("Delete requested with null ID");
+                return NotFound();
+            }
 
             var client = _repository.GetClientById(id.Value);
             if (client == null)
             {
+                _logger.LogWarning("Client with ID {ClientId} not found for Delete", id.Value);
                 TempData["Error"] = "Client not found.";
                 return RedirectToAction("Index");
             }
+
+            _logger.LogInformation("Accessed Delete confirmation view for client {ClientName} with ID {ClientId}", client.Name, client.Id);
             return View(client);
         }
+
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public IActionResult DeleteConfirmed(int id)
@@ -152,11 +202,12 @@ namespace ClientCrudApp.Controllers
             try
             {
                 _repository.DeleteClient(id);
+                _logger.LogInformation("Client with ID {ClientId} deleted successfully", id);
                 TempData["Success"] = "Client deleted successfully!";
             }
             catch (Exception e)
             {
-                Console.WriteLine($"Error deleting client: {e.Message}");
+                _logger.LogError(e, "Error deleting client with ID {ClientId}", id);
                 TempData["Error"] = "Failed to delete client.";
             }
             return RedirectToAction("Index");

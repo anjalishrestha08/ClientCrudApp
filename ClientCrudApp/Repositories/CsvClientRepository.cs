@@ -5,10 +5,12 @@ namespace ClientCrudApp.Repositories
     public class CsvClientRepository : IClientRepository
     {
         private readonly string _filePath;
+        private readonly ILogger<CsvClientRepository> _logger;
 
-        public CsvClientRepository()
+        public CsvClientRepository(ILogger<CsvClientRepository> logger)
         {
             _filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "data", "clients.csv");
+            _logger = logger;
         }
 
         //Save all clients to csv
@@ -18,6 +20,7 @@ namespace ClientCrudApp.Repositories
             if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
             {
                 Directory.CreateDirectory(dir);
+                _logger.LogInformation("Directory {dir} created for CSV storage", dir);
             }
             var lines = new List<string>
             {
@@ -37,6 +40,7 @@ namespace ClientCrudApp.Repositories
                     $"{c.PreferredModeOfContact}"
                 ));
             System.IO.File.WriteAllLines(_filePath, lines);
+            _logger.LogInformation("CSV file updated with {Count} clients at {FilePath}", clients.Count, _filePath);
         }
         //Read All Clients from csv
         public List<Client> GetAllClients()
@@ -44,7 +48,10 @@ namespace ClientCrudApp.Repositories
             var clients = new List<Client>();
 
             if (!System.IO.File.Exists(_filePath))
+            {
+                _logger.LogWarning("CSV file not found at {FilePath}", _filePath);
                 return clients;
+            }
 
             var lines = System.IO.File.ReadAllLines(_filePath).Skip(1); // Skip header
             foreach (var line in lines)
@@ -66,12 +73,22 @@ namespace ClientCrudApp.Repositories
                     PreferredModeOfContact = Enum.Parse<Client.ContactMode>(cols[10])
                 });
             }
+            _logger.LogInformation("Loaded {Count} clients from CSV file {FilePath}", clients.Count, _filePath);
             return clients;
         }
         //Get client by id
         public Client? GetClientById(int id)
         {
-            return GetAllClients().FirstOrDefault(c => c.Id == id);
+            var client = GetAllClients().FirstOrDefault(c => c.Id == id);
+            if (client == null)
+            {
+                _logger.LogWarning("Client with ID {ClientId} not found in CSV", id);
+            }
+            else
+            {
+                _logger.LogInformation("Client with ID {ClientId} retrieved from CSV", id);
+            }
+            return client;
         }
         //Create Client
         public void AddClient(Client client)
@@ -80,6 +97,7 @@ namespace ClientCrudApp.Repositories
             client.Id = clients.Any() ? clients.Max(c => c.Id) + 1 : 1;
             clients.Add(client);
             SaveClientsToCsv(clients);
+            _logger.LogInformation("Client {ClientName} added successfully with ID {ClientId}", client.Name, client.Id);
         }
 
         //Edit Client
@@ -87,7 +105,11 @@ namespace ClientCrudApp.Repositories
         {
             var clients = GetAllClients();
             var existing = clients.FirstOrDefault(c => c.Id == client.Id);
-            if (existing == null) return;
+            if (existing == null)
+            {
+                _logger.LogWarning("Attempt to update non-existent client with ID {ClientId}", client.Id);
+                return;
+            }
 
             existing.Name = client.Name;
             existing.Gender = client.Gender;
@@ -101,6 +123,7 @@ namespace ClientCrudApp.Repositories
             existing.PreferredModeOfContact = client.PreferredModeOfContact;
 
             SaveClientsToCsv(clients);
+            _logger.LogInformation("Client {ClientName} with ID {ClientId} updated successfully", client.Name, client.Id);
         }
         //Delete Client
         public void DeleteClient(int id)
@@ -111,6 +134,11 @@ namespace ClientCrudApp.Repositories
             {
                 clients.Remove(client);
                 SaveClientsToCsv(clients);
+                _logger.LogInformation("Client with ID {ClientId} deleted successfully", id);
+            }
+            else
+            {
+                _logger.LogWarning("Attempted to delete non-existent client with ID {ClientId}", id);
             }
         }
     }

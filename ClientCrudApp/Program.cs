@@ -7,6 +7,11 @@ builder.Services.AddControllersWithViews();
 
 builder.Services.AddScoped<IClientRepository, CsvClientRepository>();
 
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
+builder.Logging.AddDebug();
+builder.Logging.SetMinimumLevel(LogLevel.Information);
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
