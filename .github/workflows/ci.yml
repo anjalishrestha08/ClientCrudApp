@@ -3,11 +3,11 @@ name: .NET CI
 on:
   push:
     branches: 
-      - main
+      - master
       - Feature
   pull_request:
     branches:
-      - main
+      - master
 
 jobs:
   build:
