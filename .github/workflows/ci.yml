@@ -1,0 +1,42 @@
+name: .NET CI
+
+on:
+  push:
+    branches: 
+      - main
+      - Feature
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: 8.0.x   
+    - name: Restore dependencies
+      run: dotnet restore
+
+    - name: Build
+      run: dotnet build --no-restore --configuration Release
+
+    - name: Run tests
+      run: dotnet test --no-build --configuration Release --collect:"Xplat Code Coverage"
+    
+    - name: SonarCloud Scan
+      uses: SonarSource/sonarcloud-github-action@v2
+      env:
+        SONAR_TOKEN: ${{ secrets.ClientCrudApp_SonarToken }}
+      with:
+        args: >
+          -Dsonar.organization=anjalishrestha08
+          -Dsonar.projectKey=anjalishrestha08_ClientCrudApp
+          -Dsonar.projectName="ClientCrudApp"
+          -Dsonar.host.url=https://sonarcloud.io
